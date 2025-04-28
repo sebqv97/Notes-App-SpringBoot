@@ -1,4 +1,4 @@
-package com.sebqvcoding.Notes
+package com.sebqvcoding.springboot
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest

@@ -1,4 +1,4 @@
-package com.sebqvcoding.Notes
+package com.sebqvcoding.springboot
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
