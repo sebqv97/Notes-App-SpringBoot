@@ -4,19 +4,20 @@ import com.sebqvcoding.springboot.note.controller.core.NoteRequest
 import com.sebqvcoding.springboot.note.controller.core.NoteResponse
 import com.sebqvcoding.springboot.note.database.model.Note
 import org.bson.types.ObjectId
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import java.time.Instant
 
 @Component
 class NoteMapper {
-    infix fun mapToNote(noteRequest: NoteRequest): Note {
+    fun mapToNote(noteRequest: NoteRequest, ownerId: String): Note {
         return with(noteRequest) {
             Note(
                 title = title,
                 content = content,
                 color = color,
                 createdAt = Instant.now(),
-                ownerId = ObjectId()
+                ownerId = ObjectId(ownerId)
             )
         }
     }

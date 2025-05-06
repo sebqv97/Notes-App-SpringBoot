@@ -8,9 +8,12 @@ import com.sebqvcoding.springboot.auth.database.model.User
 import com.sebqvcoding.springboot.auth.database.repository.RefreshTokenRepository
 import com.sebqvcoding.springboot.auth.database.repository.UserRepository
 import org.bson.types.ObjectId
+import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import java.lang.IllegalArgumentException
 import java.security.MessageDigest
 import java.util.*
@@ -22,31 +25,38 @@ class AuthService(
     private val jwtService: JwtService,
     private val hashEncoder: HashEncoder
 ) {
-    fun register(email: String, password: String): User =
-        userRepository.save(
+    fun register(email: String, password: String): User {
+        val user = userRepository.findByEmail(email.trim())
+
+        if (user != null) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Email has been taken.")
+        }
+
+        return userRepository.save(
             User(
                 email = email,
                 hashedPassword = hashEncoder.encode(password)
             )
         )
+    }
 
+    // this annotation denotes that it will allow the CRUD operation only if all of them are succeeding
+    // this doesn't allow having a delete and a fail to add situation
     @Transactional
     fun refresh(refreshToken: String): TokenPair {
         if (!jwtService.validateRefreshToken(refreshToken)) {
-            throw IllegalArgumentException("Invalid token.")
+            throw ResponseStatusException(HttpStatusCode.valueOf(401), "Invalid token.")
         }
 
         val userId = jwtService.getUserIdFromToken(refreshToken)
         val user = userRepository.findById(ObjectId(userId)).orElseThrow {
-            IllegalArgumentException("No such user.")
+            ResponseStatusException(HttpStatusCode.valueOf(404), "No such user.")
         }
 
         val hashedToken = hashToken(refreshToken)
 
         refreshTokenRepository.findByUserIdAndHashedToken(ObjectId(userId), hashedToken)
-            ?: throw IllegalArgumentException(
-                "No such token, or token expired"
-            )
+            ?: throw ResponseStatusException(HttpStatusCode.valueOf(401), "No such token, or token expired")
 
         refreshTokenRepository.deleteByUserIdAndHashedToken(ObjectId(userId), hashedToken)
 

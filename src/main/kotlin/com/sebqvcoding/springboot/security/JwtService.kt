@@ -11,28 +11,28 @@ import java.util.Date
 
 @Service
 class JwtService(
-    @Value("JWT_SECRET_BASE64") private val jwtSecret: String
+    @Value("\${jwt.secret}") private val jwtSecret: String
 ) {
     private val secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecret))
 
     fun generateAccessToken(userId: String): String {
-        return generateToken(userId, TokenType.ACCESS_TOKEN, accessTokenExpiryTimeInMs)
+        return generateToken(userId,"access token", accessTokenExpiryTimeInMs)
     }
 
     fun generateRefreshToken(userId: String): String {
-        return generateToken(userId, TokenType.REFRESH_TOKEN, refreshTokenExpiryTimeInMs)
+        return generateToken(userId, "refresh token", refreshTokenExpiryTimeInMs)
     }
 
     fun validateAccessToken(token: String): Boolean {
         val claims = parseAllClaims(token) ?: return false
         val tokenType = claims["type"] ?: return false
-        return tokenType == TokenType.ACCESS_TOKEN
+        return tokenType == "access token"
     }
 
     fun validateRefreshToken(token: String): Boolean {
         val claims = parseAllClaims(token) ?: return false
         val tokenType = claims["type"] ?: return false
-        return tokenType == TokenType.REFRESH_TOKEN
+        return tokenType == "refresh token"
     }
 
     fun getUserIdFromToken(token: String): String {
@@ -40,14 +40,14 @@ class JwtService(
         return claims.subject
     }
 
-    fun getExpirationFromToken(token:String): Date{
+    fun getExpirationFromToken(token: String): Date {
         val claims = parseAllClaims(token) ?: throw IllegalArgumentException("Invalid token.")
-        return  claims.expiration
+        return claims.expiration
     }
 
-    fun getIssuedAtFromToken(token:String): Date{
+    fun getIssuedAtFromToken(token: String): Date {
         val claims = parseAllClaims(token) ?: throw IllegalArgumentException("Invalid token.")
-        return  claims.issuedAt
+        return claims.issuedAt
     }
 
     private fun parseAllClaims(token: String): Claims? {
@@ -65,7 +65,7 @@ class JwtService(
 
     private fun generateToken(
         userId: String,
-        type: TokenType,
+        type: String,
         expiry: Long
     ): String {
         val now = Date()
@@ -83,9 +83,4 @@ class JwtService(
         const val accessTokenExpiryTimeInMs = 15L * 60L * 1000L
         const val refreshTokenExpiryTimeInMs = 30L * 24L * 60L * 60L * 1000L
     }
-}
-
-enum class TokenType {
-    ACCESS_TOKEN,
-    REFRESH_TOKEN
 }

@@ -22,7 +22,7 @@ class JwtAuthFilter(
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             if (jwtService.validateAccessToken(authHeader)) {
                 val userId = jwtService.getUserIdFromToken(authHeader)
-                val auth = UsernamePasswordAuthenticationToken(userId, null)
+                val auth = UsernamePasswordAuthenticationToken(userId, null, emptyList())
 
                 // this is a global object that we can retrieve the userId from anywhere
                 SecurityContextHolder.getContext().authentication = auth
